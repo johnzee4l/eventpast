@@ -90,7 +90,16 @@
 
                     <!-- Registrations -->
                     <div class="bg-white shadow rounded-lg p-6">
-                        <h2 class="text-lg font-semibold text-gray-900 mb-4">Registrations</h2>
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-lg font-semibold text-gray-900">Registrations</h2>
+                            <a
+                                v-if="event.registrations.length > 0"
+                                :href="route('events.registrations.export', event.id)"
+                                class="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                                Export CSV
+                            </a>
+                        </div>
                         
                         <div v-if="event.registrations.length > 0" class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">

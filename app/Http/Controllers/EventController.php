@@ -6,6 +6,7 @@ use App\Models\Event;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class EventController extends Controller
 {
@@ -118,5 +119,51 @@ class EventController extends Controller
         
         return redirect()->route('events.index')
             ->with('success', 'Event deleted successfully');
+    }
+
+    public function exportRegistrations(Event $event): StreamedResponse
+    {
+        $this->authorize('view', $event);
+
+        $filename = $event->slug.'-registrations-'.now()->format('Ymd').'.csv';
+
+        return response()->streamDownload(function () use ($event) {
+            $handle = fopen('php://output', 'w');
+
+            fputcsv($handle, [
+                'Name',
+                'Email',
+                'Phone',
+                'Ticket Type',
+                'Ticket Price',
+                'Status',
+                'Source',
+                'Registered At',
+                'Checked In At',
+            ]);
+
+            $event->registrations()
+                ->with(['attendee', 'ticketType', 'checkIn'])
+                ->orderBy('created_at')
+                ->chunk(200, function ($registrations) use ($handle) {
+                    foreach ($registrations as $registration) {
+                        fputcsv($handle, [
+                            $registration->attendee->name,
+                            $registration->attendee->email,
+                            $registration->attendee->phone,
+                            $registration->ticketType->name,
+                            $registration->ticketType->price,
+                            $registration->status,
+                            $registration->source,
+                            $registration->created_at?->toDateTimeString(),
+                            $registration->checkIn?->scanned_at?->toDateTimeString(),
+                        ]);
+                    }
+                });
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }
