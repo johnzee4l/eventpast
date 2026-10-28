@@ -144,7 +144,7 @@
                 <!-- Actions -->
                 <div class="space-y-3">
                     <a 
-                        href="#" 
+                        :href="calendarUrl" 
                         class="block w-full px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-md hover:bg-gray-200"
                     >
                         Add to Calendar
@@ -167,6 +167,10 @@ const copied = ref(false);
 
 const qrcodeUrl = computed(() => {
     return `/registrations/${props.registration.id}/qrcode`;
+});
+
+const calendarUrl = computed(() => {
+    return route('public.events.calendar', props.registration.event.slug);
 });
 
 const referralUrl = computed(() => {

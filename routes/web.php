@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventCalendarController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\CheckInController;
 use App\Http\Controllers\ContentController;
@@ -39,6 +40,7 @@ Route::prefix('content')->group(function () {
 // Public event pages (with tenant middleware)
 Route::middleware(['tenant'])->group(function () {
     Route::get('/events/{event:slug}', [RegistrationController::class, 'show'])->name('public.events.show');
+    Route::get('/events/{event:slug}/calendar', [EventCalendarController::class, 'download'])->name('public.events.calendar');
     Route::post('/events/{event:slug}/register', [RegistrationController::class, 'store'])->name('public.events.register');
     Route::get('/registrations/{registration}/confirmation', [RegistrationController::class, 'confirmation'])->name('registrations.confirmation');
     Route::get('/registrations/{registration}/qrcode', [RegistrationController::class, 'qrcode'])->name('registrations.qrcode');
