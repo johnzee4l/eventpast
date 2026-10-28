@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -118,5 +120,46 @@ class EventController extends Controller
         
         return redirect()->route('events.index')
             ->with('success', 'Event deleted successfully');
+    }
+
+    public function duplicate(Event $event)
+    {
+        $this->authorize('view', $event);
+        $this->authorize('create', Event::class);
+
+        $copy = DB::transaction(function () use ($event) {
+            $copy = $event->replicate();
+            $copy->title = $event->title.' (Copy)';
+            $copy->slug = $this->uniqueEventSlug($event->tenant_id, $event->title);
+            $copy->status = 'draft';
+            $copy->save();
+
+            foreach ($event->ticketTypes()->get() as $ticketType) {
+                $ticketCopy = $ticketType->replicate(['quantity_sold']);
+                $ticketCopy->event_id = $copy->id;
+                $ticketCopy->quantity_sold = 0;
+                $ticketCopy->save();
+            }
+
+            return $copy;
+        });
+
+        return redirect()
+            ->route('events.edit', $copy)
+            ->with('success', 'Event duplicated as a draft.');
+    }
+
+    private function uniqueEventSlug(int $tenantId, string $title): string
+    {
+        $base = (Str::slug($title) ?: 'event').'-copy';
+        $slug = $base;
+        $suffix = 2;
+
+        while (Event::withTrashed()->where('tenant_id', $tenantId)->where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
+        }
+
+        return $slug;
     }
 }

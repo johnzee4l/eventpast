@@ -26,6 +26,12 @@
                     >
                         Edit Event
                     </Link>
+                    <button
+                        @click="duplicateEvent"
+                        class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                        Duplicate
+                    </button>
                     <Link
                         :href="route('events.referrals', event.id)"
                         class="px-4 py-2 bg-purple-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-purple-700"
@@ -256,6 +262,12 @@ const publishEvent = () => {
             ...props.event,
             status: 'published',
         });
+    }
+};
+
+const duplicateEvent = () => {
+    if (confirm('Create a draft copy of this event?')) {
+        router.post(route('events.duplicate', props.event.id));
     }
 };
 </script>
